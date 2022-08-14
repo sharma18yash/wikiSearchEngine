@@ -70,6 +70,31 @@ class wikiHandler( xml.sax.ContentHandler):
         else:
             # self.category_list.append("")
             self.category = ""
+    def finalProcessing4(self, data, tag):
+        if len(data) > 0:
+            processed = self.pre.filter_content(data)
+            processed = self.pre.get_content_body(processed)
+            # processed = self.pre.stemmer(processed)
+            processed = self.pre.remove_stopwords(processed)
+            # self.category_list.append(processed)
+            # x = processed.split()
+            self.external_links = processed
+        else:
+            # self.category_list.append("")
+            self.external_links = ""
+    
+    def finalProcessing5(self, data, tag):
+        if len(data) > 0:
+            processed = self.pre.filter_content(data)
+            processed = self.pre.get_content_body(processed)
+            # processed = self.pre.stemmer(processed)
+            processed = self.pre.remove_stopwords(processed)
+            # self.category_list.append(processed)
+            # x = processed.split()
+            self.references = processed
+        else:
+            # self.category_list.append("")
+            self.references = ""
         
     
 
@@ -98,17 +123,25 @@ class wikiHandler( xml.sax.ContentHandler):
                 temp_infobox, endIndex = self.pre.getInfobox(self.textData)
                 temp_body = self.pre.getBody(endIndex, self.textData)
                 temp_category = self.pre.getCategory(self.textData)
+                temp_links =    self.pre.processExternalLinksData(self.textData)
+                temp_references = self.pre.processReferences(self.textData)
                 # self.infobox, self.category, self.external_links, self.references, self.body = self.pre.processData(self.textData, False, True) 
                 t1 = threading.Thread(target = self.finalProcessing2, args=(temp_infobox, 1) )
                 t2 = threading.Thread(target = self.finalProcessing1, args=(temp_body, 1) )
                 t3 = threading.Thread(target = self.finalProcessing3, args=(temp_category, 1) )
+                t4 = threading.Thread(target = self.finalProcessing4, args=(temp_links, 1) )
+                t5 = threading.Thread(target = self.finalProcessing5, args=(temp_references, 1) )
                 t1.start()
                 t2.start()
                 t3.start()
+                t4.start()
+                t5.start()
 
                 t1.join()
                 t2.join()
                 t3.join()
+                t4.join()
+                t5.join()
                 self.isText = False
                 self.count+=1
                 self.textData = ""
@@ -162,10 +195,10 @@ class wikiHandler( xml.sax.ContentHandler):
         return dictionary
     
     def create_index(self):
-        # if len(self.title_list) != len(self.infobox_list) or len(self.infobox_list) != len(self.body_list) or len(self.body_list) != len(self.category_list):
+        if len(self.title_list) != len(self.infobox_list) or len(self.infobox_list) != len(self.body_list) or len(self.body_list) != len(self.category_list):
             # print( len(self.title), len(self.infobox), len(self.category), len(self.body))
             # print("INVALID INPUT")
-            # exit(0)
+            exit(0)
         
         global documents_indexed
         global global_index
@@ -175,8 +208,8 @@ class wikiHandler( xml.sax.ContentHandler):
         info_index = self.create_dict(self.infobox)
         body_ind = self.create_dict(self.body)
         cat_ind = self.create_dict(self.category)
-        # ref_ind = self.create_dict(self.references)
-        # exernal_ind = self.create_dict(self.external_links)
+        ref_ind = self.create_dict(self.references)
+        exernal_ind = self.create_dict(self.external_links)
 
         # print("TITLE: ", title_index)
         # print("INFOBOX: ", info_index)
@@ -184,7 +217,7 @@ class wikiHandler( xml.sax.ContentHandler):
         # print("CATEGORY: ", cat_ind)
 
         # all_data = self.title_list + " " + self.infobox_list + " " + self.body_list + " " + self.category_list + " "+self.references + " " + self.external_links
-        all_data = self.title + " " + self.infobox + " " + self.body + " " + self.category
+        all_data = self.title + " " + self.infobox + " " + self.body + " " + self.category+ " " + self.references + " " + self.external_links
         all_data = set(all_data.split())
         # print("ALL DATA: ", all_data)
         
@@ -203,11 +236,11 @@ class wikiHandler( xml.sax.ContentHandler):
             if word in cat_ind:
                 count = count + "-c{}".format(cat_ind[word])
 
-            # if word in ref_ind:
-            #     count = count + "-r{}".format(ref_ind[word])
+            if word in ref_ind:
+                count = count + "-r{}".format(ref_ind[word])
 
-            # if word in exernal_ind:
-            #     count = count + "-e{}".format(exernal_ind[word])
+            if word in exernal_ind:
+                count = count + "-e{}".format(exernal_ind[word])
 
             count+="|"
             if word in global_index:

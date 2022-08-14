@@ -20,6 +20,9 @@ class Preprocess():
         }
         self.stopwords = self.getStopWords()
         self.ps = PorterStemmer()
+        self.externalLinksPattern = r'==External links==\n[\s\S]*?\n\n'
+        self.referencesPattern = r'== ?references ?==(.*?)\n\n' #r'==References==\n[\s\S]*?\n\n'
+        self.removeSymbolsPattern = r"[~`!@#$%-^*+{\[}\]\|\\<>/?]"
   
     def tokenise(self, data):
         tokens = data.split()
@@ -147,4 +150,20 @@ class Preprocess():
             processed = self.remove_stopwords(processed)
             temp = processed.split()
             return " ".join(temp)
-        return ""    
+        return ""
+
+    def processExternalLinksData(self, data):
+        links = re.findall(self.externalLinksPattern, data, flags= re.IGNORECASE)
+        links = " ".join(links)
+        links = links[20:]
+        links = re.sub('[|]', ' ', links)
+        links = re.sub('[^a-zA-Z ]', ' ', links)
+        # self.external_links_dict = self.basicProcessing(links)  
+        return links
+
+    def processReferences(self, data):
+        references = re.findall(self.referencesPattern, data, flags=re.DOTALL | re.MULTILINE | re.IGNORECASE)
+        references = ' '.join(references)
+        references = re.sub(self.removeSymbolsPattern, ' ', references)
+        # self.references_dict = self.basicProcessing(references)  
+        return references
