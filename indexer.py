@@ -13,6 +13,12 @@ from collections import OrderedDict
 
 documents_indexed = 0
 global_index = dict()
+index_count = 0
+all_title = []
+folder_name = sys.argv[2]
+stat_file = sys.argv[3]
+total_keywords=0
+total_indexed_words=0
 
 
 class wikiHandler( xml.sax.ContentHandler):
@@ -125,7 +131,6 @@ class wikiHandler( xml.sax.ContentHandler):
                 temp_category = self.pre.getCategory(self.textData)
                 temp_links =    self.pre.processExternalLinksData(self.textData)
                 temp_references = self.pre.processReferences(self.textData)
-                # self.infobox, self.category, self.external_links, self.references, self.body = self.pre.processData(self.textData, False, True) 
                 t1 = threading.Thread(target = self.finalProcessing2, args=(temp_infobox, 1) )
                 t2 = threading.Thread(target = self.finalProcessing1, args=(temp_body, 1) )
                 t3 = threading.Thread(target = self.finalProcessing3, args=(temp_category, 1) )
@@ -146,37 +151,21 @@ class wikiHandler( xml.sax.ContentHandler):
                 self.count+=1
                 self.textData = ""
                 self.haveText = True
-                # print("TITLE: ", self.title)
-                # print("INFOBOX: ", self.infobox)
-                # print("CATEGORY: ", self.category)
-                # # print("EXTERNAL LINKS: ", self.external_links_list)
-                # # print("REFERENCES: ", self.references_list)
-                # print("BODY: ", self.body)        
-        
-        # if(self.count == 15):
-        #     exit(0)
        
         if self.haveTitle and self.haveText:
-            # print("TITLE", self.title_list)
-            # print("INFOBOX", self.infobox_list)
-            # print("BODY", self.body_list)
-            # print("CATEGORY", self.category_list)
+
             self.create_index()
             self.haveText = False
             self.haveTitle = False
         
         
-        # self.count = 0
             self.title_list = ""
             self.infobox_list = ""
             self.body_list = ""
             self.category_list = ""
             self.external_links = ""
             self.refernces = ""
-        # print(documents_indexed)
-        
-        
-        # global documents_indexed
+
         
 
     def characters(self, content):
@@ -197,13 +186,15 @@ class wikiHandler( xml.sax.ContentHandler):
     def create_index(self):
         if len(self.title_list) != len(self.infobox_list) or len(self.infobox_list) != len(self.body_list) or len(self.body_list) != len(self.category_list):
             # print( len(self.title), len(self.infobox), len(self.category), len(self.body))
-            # print("INVALID INPUT")
+            print("INVALID INPUT")
             exit(0)
         
         global documents_indexed
         global global_index
-        # for i in range(len(self.title)):
+        global all_title
+        global total_keywords
         documents_indexed+=1
+        all_title.append(self.title)
         title_index = self.create_dict(self.title)
         info_index = self.create_dict(self.infobox)
         body_ind = self.create_dict(self.body)
@@ -216,9 +207,9 @@ class wikiHandler( xml.sax.ContentHandler):
         # print("BODY: ",body_ind )
         # print("CATEGORY: ", cat_ind)
 
-        # all_data = self.title_list + " " + self.infobox_list + " " + self.body_list + " " + self.category_list + " "+self.references + " " + self.external_links
         all_data = self.title + " " + self.infobox + " " + self.body + " " + self.category+ " " + self.references + " " + self.external_links
         all_data = set(all_data.split())
+        total_keywords += len(all_data)
         # print("ALL DATA: ", all_data)
         
         for word in all_data:
@@ -248,24 +239,48 @@ class wikiHandler( xml.sax.ContentHandler):
             else:
                 global_index[word] = count
 
-        if(documents_indexed % 100000 == 0):
+        global index_count
+        global folder_name
+        global total_indexed_words
+        if(documents_indexed % 100000 == 0 and documents_indexed != 0):
             print(documents_indexed, "len = ", len(global_index))
+            new_index = OrderedDict(sorted(global_index.items()))
+            total_indexed_words += len(new_index)
+            with open('{}/index.txt{}'.format(folder_name, index_count), 'w') as index_file:
+                index_file.write(json.dumps(new_index))
+            global_index = dict()
+            index_count+=1
+
 
 
 if ( __name__ == "__main__"):
     
     t1 = time.time()
+    wikidump = sys.argv[1]
     parser = xml.sax.make_parser()
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
     Handler = wikiHandler()
     parser.setContentHandler( Handler )
-    parser.parse(sys.argv[1])
+    parser.parse(wikidump)
     
     new_index = OrderedDict(sorted(global_index.items()))
+    total_indexed_words += len(new_index)
+    
     print("DOCUMENTS INDEXED: ", documents_indexed)
-    with open('index.txt', 'w') as index_file:
+    with open('{}/index.txt{}'.format(folder_name, index_count), 'w') as index_file:
         index_file.write(json.dumps(new_index))
 
-    print(len(global_index))
+    
+    
+    with open('{}/title_list.txt'.format(folder_name), 'w') as title_file:
+        title_file.write(json.dumps(all_title))
     t2 = time.time()
+
+    # write total_indexed_words and total_keywords to file
+    with open('{}'.format(stat_file), 'w') as total_indexed_words_file:
+        total_indexed_words_file.write(str(total_indexed_words))
+        total_indexed_words_file.write(str("\n"))
+        total_indexed_words_file.write(str(total_keywords))
+
+
     print("PARSING COMPLETED IN SECONDS: ", t2 - t1)

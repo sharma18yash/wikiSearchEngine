@@ -64,7 +64,7 @@ class Preprocess():
         return content 
 
     def filter_content(self, content):
-        filters = set(['(', '{', '[', ']', '}', ')', '=', '|', '?', ',', '+', '\'', '\\', '*', '#', ';', '!', '\"', '%'])
+        filters = set(['(', '{', '[', ']', '}', ')', '=', '|', '?', ',', '+', '\'', '\\', '*', '#', ';', '!', '\"', '%', '.', '-', '*'])
         content = content.strip()
         if len(content) == 0:
             return content
