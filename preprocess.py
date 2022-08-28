@@ -28,7 +28,19 @@ class Preprocess():
         tokens = data.split()
         return tokens
 
+    def checkString(self, str):
+        flag_l = False
+        flag_n = False
+        for i in str:
+            if i.isalpha():
+                flag_l = True
+            if i.isdigit():
+                flag_n = True
 
+            if flag_l and flag_n:
+                return True
+        return flag_l and flag_n
+    
     def getStopWords(self):
         stopwords = set()
         file1 = open('stopwords.txt', 'r')
@@ -41,6 +53,9 @@ class Preprocess():
         
         stemmed_data = []
         for word in data.split():
+            if self.checkString(word):
+                pattern = r'[0-9]'
+                word = re.sub(pattern, '', word)
             stemmed_data.append(self.ps.stem(word))
         return " ".join(stemmed_data)
 
@@ -64,7 +79,7 @@ class Preprocess():
         return content 
 
     def filter_content(self, content):
-        filters = set(['(', '{', '[', ']', '}', ')', '=', '|', '?', ',', '+', '\'', '\\', '*', '#', ';', '!', '\"', '%', '.', '-', '*'])
+        filters = set(['(', '{', '[', ']', '/' , '}', ')', '=', '|', '?', ',', '+', '\'', '\\', '*', '#', ';', '!', '\"', '%', '.', '-', '*', '&', '$','_','^','`', "'", '"'])
         content = content.strip()
         if len(content) == 0:
             return content

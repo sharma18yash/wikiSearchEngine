@@ -40,9 +40,10 @@ class wikiHandler( xml.sax.ContentHandler):
 
     def finalProcessing1(self, data, tag):
         if len(data) > 0:
+            data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
-            # processed = self.pre.stemmer(processed)
+            processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.body_list.append(processed)
             # x = processed.split()
@@ -53,9 +54,10 @@ class wikiHandler( xml.sax.ContentHandler):
 
     def finalProcessing2(self, data, tag):
         if len(data) > 0:
+            data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
-            # processed = self.pre.stemmer(processed)
+            processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.infobox_list.append(processed)
             # x = processed.split()
@@ -66,9 +68,10 @@ class wikiHandler( xml.sax.ContentHandler):
 
     def finalProcessing3(self, data, tag):
         if len(data) > 0:
+            data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
-            # processed = self.pre.stemmer(processed)
+            processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.category_list.append(processed)
             # x = processed.split()
@@ -78,9 +81,10 @@ class wikiHandler( xml.sax.ContentHandler):
             self.category = ""
     def finalProcessing4(self, data, tag):
         if len(data) > 0:
+            data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
-            # processed = self.pre.stemmer(processed)
+            processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.category_list.append(processed)
             # x = processed.split()
@@ -91,9 +95,10 @@ class wikiHandler( xml.sax.ContentHandler):
     
     def finalProcessing5(self, data, tag):
         if len(data) > 0:
+            data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
-            # processed = self.pre.stemmer(processed)
+            processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.category_list.append(processed)
             # x = processed.split()
@@ -214,29 +219,39 @@ class wikiHandler( xml.sax.ContentHandler):
         
         for word in all_data:
             count = ""
-            count = count+"d{}".format(documents_indexed)
+            # count = count+"d{}".format(documents_indexed)
+            flag = False
             if word in title_index:
+                flag = True
                 count = count + "-t{}".format(title_index[word])
 
             if word in info_index:
+                flag = True
                 count = count + "-i{}".format(info_index[word])
             
             if word in body_ind:
+                flag = True
                 count = count + "-b{}".format(body_ind[word])
             
             if word in cat_ind:
+                flag = True
                 count = count + "-c{}".format(cat_ind[word])
 
             if word in ref_ind:
+                flag = True
                 count = count + "-r{}".format(ref_ind[word])
 
             if word in exernal_ind:
+                flag = True
                 count = count + "-e{}".format(exernal_ind[word])
 
-            count+="|"
+        
+            if flag:
+                count = "d{}".format(documents_indexed) + count
+                count = count + "|"
             if word in global_index:
                 global_index[word] += count
-            else:
+            elif(len(count) > 2):
                 global_index[word] = count
 
         global index_count
@@ -246,8 +261,12 @@ class wikiHandler( xml.sax.ContentHandler):
             print(documents_indexed, "len = ", len(global_index))
             new_index = OrderedDict(sorted(global_index.items()))
             total_indexed_words += len(new_index)
-            with open('{}/index.txt{}'.format(folder_name, index_count), 'w') as index_file:
-                index_file.write(json.dumps(new_index))
+            # with open('{}/index{}.txt'.format(folder_name, index_count), 'w') as index_file:
+            #     index_file.write(json.dumps(new_index))
+
+            with open('{}/index{}.txt'.format(folder_name, index_count), 'w') as f: 
+                for key, value in new_index.items(): 
+                    f.write('%s:%s\n'% (key, value))
             global_index = dict()
             index_count+=1
 
@@ -265,10 +284,11 @@ if ( __name__ == "__main__"):
     
     new_index = OrderedDict(sorted(global_index.items()))
     total_indexed_words += len(new_index)
-    
+
     print("DOCUMENTS INDEXED: ", documents_indexed)
-    with open('{}/index.txt{}'.format(folder_name, index_count), 'w') as index_file:
-        index_file.write(json.dumps(new_index))
+    with open('{}/index{}.txt'.format(folder_name, index_count), 'w') as f: 
+        for key, value in new_index.items(): 
+            f.write('%s:%s\n'% (key, value))
 
     
     
@@ -278,9 +298,7 @@ if ( __name__ == "__main__"):
 
     # write total_indexed_words and total_keywords to file
     with open('{}'.format(stat_file), 'w') as total_indexed_words_file:
-        total_indexed_words_file.write(str(total_indexed_words))
-        total_indexed_words_file.write(str("\n"))
         total_indexed_words_file.write(str(total_keywords))
-
-
+        total_indexed_words_file.write(str("\n"))
+        total_indexed_words_file.write(str(total_indexed_words))
     print("PARSING COMPLETED IN SECONDS: ", t2 - t1)
