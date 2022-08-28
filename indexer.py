@@ -9,6 +9,8 @@ import json
 import threading
 import preProcess1
 from collections import OrderedDict
+import filehandling
+import os
 
 
 documents_indexed = 0
@@ -292,7 +294,7 @@ if ( __name__ == "__main__"):
 
     
     
-    with open('{}/title_list.txt'.format(folder_name), 'w') as title_file:
+    with open('final/title_list.txt'.format(folder_name), 'w') as title_file:
         title_file.write(json.dumps(all_title))
     t2 = time.time()
 
@@ -302,3 +304,13 @@ if ( __name__ == "__main__"):
         total_indexed_words_file.write(str("\n"))
         total_indexed_words_file.write(str(total_indexed_words))
     print("PARSING COMPLETED IN SECONDS: ", t2 - t1)
+
+    print("MERGING FILES")
+    fh = filehandling.file_handling(index_count)
+    secondary_index_files = fh.merge()
+    print("SECONDARY FILES CREATED: ", secondary_index_files )
+
+    print("REMVOVING TEMPORARY FILES")
+
+    for i in range(0, index_count):
+        os.remove("tmp/index{}.txt".format(i))
