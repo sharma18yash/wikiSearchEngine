@@ -6,7 +6,6 @@ class MinHeap:
         self.maxsize = 1000000
         self.size = 0
         self.Heap = ["0", 0, ""]*(self.maxsize + 1)
-        # self.Heap[0][0] = 
         self.FRONT = 1
 
     def parent(self, pos):
@@ -52,11 +51,13 @@ class MinHeap:
 
         current = self.size
         parent_index = self.parent(current)
-
-        while self.Heap[current][0] < self.Heap[self.parent(current)][0]:
-            self.swap(current, self.parent(current))
-            current = self.parent(current)
-
+        
+        try:
+            while self.Heap[current][0] < self.Heap[self.parent(current)][0]:
+                self.swap(current, self.parent(current))
+                current = self.parent(current)
+        except IndexError:
+            print("Index error")
 
     def minheap(self):
 

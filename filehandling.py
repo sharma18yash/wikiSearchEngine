@@ -18,20 +18,21 @@ class file_handling:
         l = []
         hp = heap.MinHeap()
         final_dict = {}
+        error_count = 0
         for p in self.file_pointer:
             data = p.readline()
             data = data.split(":")
-            if(len(data) > 2):
+            if(len(data) != 2):
                 print("error occured at: ", data)
-            key = data[0]
-            value = data[1]
-            hp.insert([key,p, value])
+            else:
+                key = data[0]
+                value = data[1]
+                hp.insert([key,p, value])
 
         hp.minheap()
 
         final_dict = {}
         index_count = 0
-        error_count = 0
         unique_tokens = 0
         prev = '0'
         while(hp.size > 0):
@@ -49,17 +50,17 @@ class file_handling:
                         # print("printing key[0]: ", key[0])
                         with open('final/final_index{}.txt'.format(index_count), 'a') as f: 
                             for key, value in final_dict.items():
-                                if(key[0] == 'z'):
-                                    print(key, index_count) 
-                                f.write('%s:%s\n'% (key, value))
+                                # if(key[0] == 'z'):
+                                    # print(key, index_count) 
+                                f.write('%s~%s\n'% (key, value))
                         index_count+=1
                         unique_tokens += len(final_dict)
                         final_dict = {}
                     else:
-                        print("misc :",  key[0])
+                        # print("misc :",  key[0])
                         with open('final/misc.txt', 'a') as f: 
                             for key, value in final_dict.items(): 
-                                f.write('%s:%s\n'% (key, value))
+                                f.write('%s~%s\n'% (key, value))
                         unique_tokens += len(final_dict)
                         final_dict = {}
             
@@ -73,16 +74,17 @@ class file_handling:
             data = fp.readline().strip("\n")
             if len(data) > 0:
                 data = data.split(":")
-                if(len(data) > 2):
+                if(len(data) != 2):
                     error_count+=1
-                key = data[0]
-                value = data[1]
-                hp.insert([key, fp, value])
+                else:
+                    key = data[0]
+                    value = data[1]
+                    hp.insert([key, fp, value])
 
         with open('final/misc.txt', 'a') as f: 
-            print("printing prev: ", prev)
+            # print("printing prev: ", prev)
             for key, value in final_dict.items(): 
-                f.write('%s:%s\n'% (key, value))
+                f.write('%s~%s\n'% (key, value))
             unique_tokens+= len(final_dict)
             final_dict = {}
 

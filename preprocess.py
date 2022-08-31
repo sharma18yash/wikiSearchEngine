@@ -79,7 +79,7 @@ class Preprocess():
         return content 
 
     def filter_content(self, content):
-        filters = set(['(', '{', '[', ']', '/' , '}', ')', '=', '|', '?', ',', '+', '\'', '\\', '*', '#', ';', '!', '\"', '%', '.', '-', '*', '&', '$','_','^','`', "'", '"'])
+        filters = set(['(', '{', '[', ']', '/' , '}', ')', '=', '|', '?', ',', '+', '\'', '\\', '*', '#', ';', '!', '\"', '%', '.', '-', '*', '&', '$','_','^','`', "'", '"', ":", "`"])
         content = content.strip()
         if len(content) == 0:
             return content
@@ -159,10 +159,11 @@ class Preprocess():
 
     def finalProcessing(self, data):
         if len(data) > 0:
+            processed = data.lower()
             processed = self.filter_content(data)
             processed = self.get_content_body(processed)
-            processed = self.stemmer(processed)
-            processed = self.remove_stopwords(processed)
+            # processed = self.stemmer(processed)
+            # processed = self.remove_stopwords(processed)
             temp = processed.split()
             return " ".join(temp)
         return ""

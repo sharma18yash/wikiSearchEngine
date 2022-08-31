@@ -7,7 +7,6 @@ import preprocess
 import time
 import json
 import threading
-import preProcess1
 from collections import OrderedDict
 import filehandling
 import os
@@ -38,13 +37,15 @@ class wikiHandler( xml.sax.ContentHandler):
         self.pre = preprocess.Preprocess()
         self.haveTitle = False
         self.haveText = False
+        print("INDEXING STARTED")
 
 
     def finalProcessing1(self, data, tag):
         if len(data) > 0:
-            data = data.lower()
+            # data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
+            processed = processed.lower()
             processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.body_list.append(processed)
@@ -59,6 +60,7 @@ class wikiHandler( xml.sax.ContentHandler):
             data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
+            processed = processed.lower()
             processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.infobox_list.append(processed)
@@ -73,6 +75,7 @@ class wikiHandler( xml.sax.ContentHandler):
             data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
+            processed = processed.lower()
             processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.category_list.append(processed)
@@ -86,6 +89,7 @@ class wikiHandler( xml.sax.ContentHandler):
             data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
+            processed = processed.lower()
             processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.category_list.append(processed)
@@ -100,6 +104,7 @@ class wikiHandler( xml.sax.ContentHandler):
             data = data.lower()
             processed = self.pre.filter_content(data)
             processed = self.pre.get_content_body(processed)
+            processed = processed.lower()
             processed = self.pre.stemmer(processed)
             processed = self.pre.remove_stopwords(processed)
             # self.category_list.append(processed)
@@ -268,7 +273,7 @@ class wikiHandler( xml.sax.ContentHandler):
 
             with open('{}/index{}.txt'.format(folder_name, index_count), 'w') as f: 
                 for key, value in new_index.items(): 
-                    f.write('%s:%s\n'% (key, value))
+                    f.write('%s~%s\n'% (key, value))
             global_index = dict()
             index_count+=1
 
@@ -290,7 +295,7 @@ if ( __name__ == "__main__"):
     print("DOCUMENTS INDEXED: ", documents_indexed)
     with open('{}/index{}.txt'.format(folder_name, index_count), 'w') as f: 
         for key, value in new_index.items(): 
-            f.write('%s:%s\n'% (key, value))
+            f.write('%s~%s\n'% (key, value))
 
     
     
@@ -310,7 +315,7 @@ if ( __name__ == "__main__"):
     secondary_index_files = fh.merge()
     print("SECONDARY FILES CREATED: ", secondary_index_files )
 
-    print("REMVOVING TEMPORARY FILES")
+    # print("REMVOVING TEMPORARY FILES")
 
-    for i in range(0, index_count):
-        os.remove("tmp/index{}.txt".format(i))
+    # for i in range(0, index_count):
+    #     os.remove("tmp/index{}.txt".format(i))
