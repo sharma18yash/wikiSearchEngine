@@ -309,11 +309,12 @@ if ( __name__ == "__main__"):
         total_indexed_words_file.write(str("\n"))
         total_indexed_words_file.write(str(total_indexed_words))
     print("PARSING COMPLETED IN SECONDS: ", t2 - t1)
+    print("tmp files created: ", index_count)
 
-    print("MERGING FILES")
-    fh = filehandling.file_handling(index_count)
-    secondary_index_files = fh.merge()
-    print("SECONDARY FILES CREATED: ", secondary_index_files )
+    # print("MERGING FILES")
+    # fh = filehandling.file_handling(index_count)
+    # secondary_index_files = fh.merge()
+    # print("SECONDARY FILES CREATED: ", secondary_index_files )
 
     # print("REMVOVING TEMPORARY FILES")
 

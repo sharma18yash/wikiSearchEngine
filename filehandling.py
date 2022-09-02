@@ -20,10 +20,11 @@ class file_handling:
         final_dict = {}
         error_count = 0
         for p in self.file_pointer:
-            data = p.readline()
-            data = data.split(":")
-            if(len(data) != 2):
-                print("error occured at: ", data)
+            data = p.readline().strip("\n")
+            data = data.split("~")
+            if(len(data) < 2):
+                error_count+=1
+                print(data)
             else:
                 key = data[0]
                 value = data[1]
@@ -73,8 +74,8 @@ class file_handling:
 
             data = fp.readline().strip("\n")
             if len(data) > 0:
-                data = data.split(":")
-                if(len(data) != 2):
+                data = data.split("~")
+                if(len(data) < 2):
                     error_count+=1
                 else:
                     key = data[0]

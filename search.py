@@ -3,12 +3,14 @@ import time
 import math
 import json
 import sys
-
+import preprocess
+from nltk.stem import PorterStemmer
 
 queries= sys.argv[1]
 
 output_file = sys.argv[2]
-
+pre = preprocess.Preprocess()
+ps = PorterStemmer()
 
 word_file = {}
 for i in range(0, 9):
@@ -28,7 +30,10 @@ with open('final/title_list.txt') as f:
   all_titles = json.load(f)
 
 category_index = { "b":0, "i":1, "c":2, "r":3, "t":4,  "e":5}
+
+section_weights = {0:20, 1:60, 2:50, 3:40, 4:100, 5:30}
     
+stopwords = pre.getStopWords()
 
 
 def read_file(file_name):
@@ -98,17 +103,17 @@ def process_posting_list(posting_lists, count=10, special = False):
                 if token[0] == 'd':
                     current_data[0] = int(token[1:])
                 if token[0] == 'b':
-                    current_data[1] = int(token[1:])
+                    current_data[1] = int(token[1:])*section_weights[category_index["b"]]
                 if token[0] == 'i':
-                    current_data[2] = int(token[1:])
+                    current_data[2] = int(token[1:])*section_weights[category_index["i"]]
                 if token[0] == 'c':
-                    current_data[3] = int(token[1:])
+                    current_data[3] = int(token[1:])*section_weights[category_index["c"]]
                 if token[0] == 'r':
-                    current_data[4] = int(token[1:])
+                    current_data[4] = int(token[1:])*section_weights[category_index["r"]]
                 if token[0] == 't':
-                    current_data[5] = int(token[1:])
+                    current_data[5] = int(token[1:])*section_weights[category_index["t"]]
                 if token[0] == 'e':
-                    current_data[6] = int(token[1:])
+                    current_data[6] = int(token[1:])*section_weights[category_index["e"]]
             current_data[7] = key
             docs.append(current_data[0])
             extracted_info.append(current_data)
@@ -138,22 +143,26 @@ def process_special_query(query):
     
     cat = "1"
     for word in query:
-        word_cat[word[2:]] = word[0:1]
-        new_query.append(word[2:])
-
-    for word in query:
         if "i:" in word or "b:" in word or "c:" in word or "r:" in word or "e:" in word or "t:" in word:
             cat = word[0:1]
             tok = word[2:]
+            tok = ps.stem(tok)
+            if tok in stopwords:
+                continue
             word_cat[tok] = cat
             new_query.append(tok)
         else:
-            word_cat[word] = cat
-            new_query.append(word)
-
+            tok = ps.stem(word)
+            if tok in stopwords:
+                continue
+            word_cat[tok] = cat
+            new_query.append(tok)
 
     
+    
     new_query = " ".join(new_query)
+    new_query = pre.remove_stopwords(new_query)
+    new_query = pre.stemmer(new_query)
     # print(word_cat, new_query)
     posting_lists = get_posting_list(new_query)
     titles, extracted_info = process_posting_list(posting_lists, count=10, special=True)
@@ -195,7 +204,9 @@ with open(queries, 'r') as f:
             # print(query)
             output = process_special_query(query)
         else:
-            posting_lists = get_posting_list(query)
+            new_query = pre.remove_stopwords(query)
+            new_query = pre.stemmer(new_query)
+            posting_lists = get_posting_list(new_query)
             output = process_posting_list(posting_lists, 10)
 
             count = 0

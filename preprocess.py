@@ -162,8 +162,8 @@ class Preprocess():
             processed = data.lower()
             processed = self.filter_content(data)
             processed = self.get_content_body(processed)
-            # processed = self.stemmer(processed)
-            # processed = self.remove_stopwords(processed)
+            processed = self.stemmer(processed)
+            processed = self.remove_stopwords(processed)
             temp = processed.split()
             return " ".join(temp)
         return ""

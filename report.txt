@@ -1,0 +1,46 @@
+DIRECTORY STRUCTURE:
+
+    1.  indexer.py
+    2.  filehandling.py
+    3.  heap.py
+    4.  preprocessing.py
+    5.  search.py
+    6. tmp
+            i)  index0.txt
+            ii) index1.txt
+                .
+                .
+                .
+    7.  final 
+            i)  title_list.txt
+            ii) final_index0.txt
+            iii)final_index1.txt
+                .
+                .
+                .
+
+
+
+OPTIMIZATION USED:
+    1.  Used multithreading to preprocess body, references, title, category, etc simulataniously to reduce time to perform indexing
+    2.  Made my own heap which stores filepointer and token to perform K WAY MERGE faster.
+    3.  Efficiently used dictionary to have O(1) lookup while searching and merging
+
+FORMAT OF FINAL INDEX:-
+    Final index created is in the form of key, value pairs, where key is the token and value is
+    posting list of that token if
+        d{a}-t{1}-i{2}-b{3}-c{4}-r{5}-e{6}|d{}-t{}.......
+        where, a-> index of title of that document
+               t-> Number of times that token was present in title of this document
+               i-> Number of times that token was present in index of this document
+               b-> Number of times that token was present in body of this document
+               c-> Number of times that token was present in category of this document
+               r-> Number of times that token was present in references of this document
+               e-> Number of times that token was present in external links of this document
+
+    Posting list of documents are seperated by "|"
+    Final index is present in "final" folder
+
+INDEX CREATION TIME AND SIZE:- 
+    Currently i have tested on only 1.5GB dump and it took 842 seconds to make index 
+    and the size is 302 MB
