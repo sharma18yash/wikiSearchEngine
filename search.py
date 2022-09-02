@@ -2,6 +2,14 @@ from cmath import log10
 import time
 import math
 import json
+import sys
+
+
+queries= sys.argv[1]
+
+output_file = sys.argv[2]
+
+
 word_file = {}
 for i in range(0, 9):
     word_file[str(i)] = "final/final_index{}.txt".format(i)
@@ -46,7 +54,11 @@ def get_posting_list(query):
         # print(file_name)
         all_words = read_file(file_name)
         # print(all_words)
-        posting_lists[word] = all_words[word]
+        try:
+            posting_lists[word] = all_words[word]
+        except KeyError:
+            pass
+            # print(word, "NOT FOUND")
     return posting_lists
 
 
@@ -112,15 +124,34 @@ def process_posting_list(posting_lists, count=10, special = False):
         return titles, extracted_info
     return titles
 
+def writetofile(ans):
+    with open(output_file, 'a') as f:
+        for i in ans:
+            f.write(i)
+            f.write("\n")
+        f.write("\n")
     
 def process_special_query(query):
     query = query.split()
     word_cat = {}
     new_query = []
     
+    cat = "1"
     for word in query:
         word_cat[word[2:]] = word[0:1]
         new_query.append(word[2:])
+
+    for word in query:
+        if "i:" in word or "b:" in word or "c:" in word or "r:" in word or "e:" in word or "t:" in word:
+            cat = word[0:1]
+            tok = word[2:]
+            word_cat[tok] = cat
+            new_query.append(tok)
+        else:
+            word_cat[word] = cat
+            new_query.append(word)
+
+
     
     new_query = " ".join(new_query)
     # print(word_cat, new_query)
@@ -133,6 +164,7 @@ def process_special_query(query):
 
     count = 0
     # print(titles)
+    ans = []
     for title in titles:
         categories = title_category[title]
         # print(categories)
@@ -140,33 +172,43 @@ def process_special_query(query):
         word_c = word_cat[word]
         ind = category_index[word_c]
         if categories[ind] > 0:
-            print(all_titles[title-1])
+            ans.append(all_titles[title-1])
             count+=1
             if count == 10:
                 break
+    writetofile(ans)
     
 
             
 
-query = input("INPUT SEARCH QUERY: ")
-t1 = time.time()
-query = query.lower()
-if "i:" in query or "b:" in query or "c:" in query or "r:" in query or "e:" in query or "t:" in query:
-    # print(query)
-    output = process_special_query(query)
-else:
-    posting_lists = get_posting_list(query)
-    output = process_posting_list(posting_lists, 10)
 
-    count = 0
-    for title in output:
-        print(all_titles[title-1])
-        count+=1
-        if count == 10:
+t1 = time.time()
+
+with open(queries, 'r') as f:
+    
+    while(True):
+        query = f.readline().strip("\n")
+        if len(query) == 0:
             break
+        query = query.lower()
+        if "i:" in query or "b:" in query or "c:" in query or "r:" in query or "e:" in query or "t:" in query:
+            # print(query)
+            output = process_special_query(query)
+        else:
+            posting_lists = get_posting_list(query)
+            output = process_posting_list(posting_lists, 10)
+
+            count = 0
+            ans = []
+            for title in output:
+                ans.append(all_titles[title-1])
+                count+=1
+                if count == 10:
+                    break
+            writetofile(ans)
 
 t2 = time.time()
-# print(posting_lists)
+    # print(posting_lists)
 print("TIME TAKEN: ", t2-t1)
     
 
