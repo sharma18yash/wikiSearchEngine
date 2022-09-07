@@ -18,6 +18,7 @@ index_count = 0
 all_title = []
 folder_name = sys.argv[2]
 stat_file = sys.argv[3]
+
 total_keywords=0
 total_indexed_words=0
 
@@ -274,6 +275,15 @@ class wikiHandler( xml.sax.ContentHandler):
             with open('{}/index{}.txt'.format(folder_name, index_count), 'w') as f: 
                 for key, value in new_index.items(): 
                     f.write('%s~%s\n'% (key, value))
+
+            with open('{}/title_list{}.txt'.format(folder_name, index_count), 'w') as f: 
+                for val in all_title:
+                    if len(val) == 0:
+                        f.write("ERROR COLUMN\n")
+                    else:
+                        f.write(("%s\n")%val)
+            
+            all_title = []
             global_index = dict()
             index_count+=1
 
@@ -299,8 +309,12 @@ if ( __name__ == "__main__"):
 
     
     
-    with open('final/title_list.txt'.format(folder_name), 'w') as title_file:
-        title_file.write(json.dumps(all_title))
+    with open('{}/title_list{}.txt'.format(folder_name, index_count), 'w') as title_file:
+        for val in all_title:
+            if len(val) == 0:
+                title_file.write("ERROR COLUMN\n")
+            else:
+                title_file.write(("%s\n")%val)
     t2 = time.time()
 
     # write total_indexed_words and total_keywords to file

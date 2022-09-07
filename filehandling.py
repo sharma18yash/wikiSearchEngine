@@ -49,7 +49,7 @@ class file_handling:
                     prev = key[0]
                     if ( ord(key[0]) >= 97 and ord(key[0]) <= 122) or ( ord(key[0]) >= 48 and ord(key[0]) <= 57):
                         # print("printing key[0]: ", key[0])
-                        with open('final/final_index{}.txt'.format(index_count), 'a') as f: 
+                        with open('tmp/final_index{}.txt'.format(index_count), 'a') as f: 
                             for key, value in final_dict.items():
                                 # if(key[0] == 'z'):
                                     # print(key, index_count) 
@@ -59,7 +59,7 @@ class file_handling:
                         final_dict = {}
                     else:
                         # print("misc :",  key[0])
-                        with open('final/misc.txt', 'a') as f: 
+                        with open('tmp/misc.txt', 'a') as f: 
                             for key, value in final_dict.items(): 
                                 f.write('%s~%s\n'% (key, value))
                         unique_tokens += len(final_dict)
@@ -82,7 +82,7 @@ class file_handling:
                     value = data[1]
                     hp.insert([key, fp, value])
 
-        with open('final/misc.txt', 'a') as f: 
+        with open('tmp/misc.txt', 'a') as f: 
             # print("printing prev: ", prev)
             for key, value in final_dict.items(): 
                 f.write('%s~%s\n'% (key, value))

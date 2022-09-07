@@ -27,19 +27,21 @@ class MinHeap:
         self.Heap[fpos], self.Heap[spos] = self.Heap[spos], self.Heap[fpos]
 
     def minHeapify(self, pos):
+        try:
+            if not self.isLeaf(pos):
+                if (self.Heap[pos][0] > self.Heap[self.leftChild(pos)][0] or
+                self.Heap[pos][0] > self.Heap[self.rightChild(pos)][0]):
 
-        if not self.isLeaf(pos):
-            if (self.Heap[pos][0] > self.Heap[self.leftChild(pos)][0] or
-            self.Heap[pos][0] > self.Heap[self.rightChild(pos)][0]):
+                    
+                    if self.Heap[self.leftChild(pos)][0] < self.Heap[self.rightChild(pos)][0]:
+                        self.swap(pos, self.leftChild(pos))
+                        self.minHeapify(self.leftChild(pos))
 
-                
-                if self.Heap[self.leftChild(pos)][0] < self.Heap[self.rightChild(pos)][0]:
-                    self.swap(pos, self.leftChild(pos))
-                    self.minHeapify(self.leftChild(pos))
-
-                else:
-                    self.swap(pos, self.rightChild(pos))
-                    self.minHeapify(self.rightChild(pos))
+                    else:
+                        self.swap(pos, self.rightChild(pos))
+                        self.minHeapify(self.rightChild(pos))
+        except TypeError:
+            pass
 
     def insert(self, l):
         element = l[0]

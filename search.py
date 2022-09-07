@@ -14,20 +14,25 @@ ps = PorterStemmer()
 
 word_file = {}
 for i in range(0, 9):
-    word_file[str(i)] = "final/final_index{}.txt".format(i)
+    word_file[str(i)] = "tmp/final_index{}.txt".format(i)
 
 c = 97
 for i in range(10, 35):
-    word_file[chr(c)] = "final/final_index{}.txt".format(i)
+    word_file[chr(c)] = "tmp/final_index{}.txt".format(i)
     c+=1
-word_file['9'] = "final/misc.txt"
-word_file['z'] = "final/misc.txt"
-word_file['@'] = "final/final_index9.txt"
-all_titles = []
+word_file['9'] = "tmp/misc.txt"
+word_file['z'] = "tmp/misc.txt"
+word_file['@'] = "tmp/final_index9.txt"
+# all_titles = []
 
 
-with open('final/title_list.txt') as f:
-  all_titles = json.load(f)
+# with open('final/title_list.txt') as f:
+#   all_titles = json.load(f)
+
+number_of_title_files = 223
+title_files = []
+for i in range(0, number_of_title_files):
+    title_files.append(i)
 
 category_index = { "b":0, "i":1, "c":2, "r":3, "t":4,  "e":5}
 
@@ -54,23 +59,25 @@ def get_posting_list(query):
     for word in query.split():
         try:
             file_name = word_file[word[0]]
+            
         except KeyError:
             file_name = "misc.txt"
         # print(file_name)
+        # print(file_name, word, word[0])
         all_words = read_file(file_name)
-        # print(all_words)
         try:
             posting_lists[word] = all_words[word]
         except KeyError:
-            pass
-            # print(word, "NOT FOUND")
+            print(word, "NOT FOUND")
+    # print(posting_lists)
+    del all_words
     return posting_lists
 
 
 
 def page_rank(all_docs, extracted_info):
     tf_idf = {}
-    N = len(all_titles)
+    N = 22200000
     for data in extracted_info:
         document_frequency = len(data)
         term_frequency = sum(data[1:7])
@@ -84,6 +91,7 @@ def page_rank(all_docs, extracted_info):
     docs = []
     for key, value in ranks:
         docs.append(key)
+    del ranks
     return docs
 
 def process_posting_list(posting_lists, count=10, special = False):
@@ -118,8 +126,14 @@ def process_posting_list(posting_lists, count=10, special = False):
             docs.append(current_data[0])
             extracted_info.append(current_data)
         all_docs.append(docs)
+    
     page_ranks = page_rank(all_docs, extracted_info)
 
+    # for i in page_ranks:
+    #     for j in extracted_info:
+    #         if j[0] == i:
+    #             print(j)
+    del all_docs
     k = min(len(page_ranks), count)
     titles = []
     for i in range(len(page_ranks)):
@@ -136,6 +150,31 @@ def writetofile(ans):
             f.write("\n")
         f.write("\n")
     
+def get_title(title):
+    ind = title
+    title_file_ind = ind//100000
+    # print(ind, title_file_ind)
+    value = title_files[title_file_ind]
+    all_titles = []
+    # if(value == "B"):
+    #     with open("tmp/title_list.txt") as f:
+    #         all_titles = json.load(f)
+    # else:
+    with open("tmp/title_list{}.txt".format(value)) as f:
+        while True:
+            data = f.readline().strip("\n")
+            if(len(data) == 0):
+                break
+            else:
+                all_titles.append(data)
+        
+
+    title_ind = ind - 100000*title_file_ind
+    print(value, title_ind, len(all_titles))
+    # print(all_titles[title_ind],", ", all_titles[title_ind+1],", ", all_titles[title_ind+2])
+    # print(title_ind, title_file_ind, len(all_titles))
+    return all_titles[title_ind]
+
 def process_special_query(query):
     query = query.split()
     word_cat = {}
@@ -167,12 +206,16 @@ def process_special_query(query):
     posting_lists = get_posting_list(new_query)
     titles, extracted_info = process_posting_list(posting_lists, count=10, special=True)
     
+    del posting_lists
+
     title_category = {}
     for arr in extracted_info:
         title_category[arr[0]] = arr[1:]
 
     count = 0
     # print(titles)
+    # print(extracted_info[:10])
+    # print()
     ans = []
     for title in titles:
         categories = title_category[title]
@@ -181,10 +224,12 @@ def process_special_query(query):
         word_c = word_cat[word]
         ind = category_index[word_c]
         if categories[ind] > 0:
-            ans.append(all_titles[title-1])
+            curr_title = get_title(title-1)
+            ans.append(curr_title)
             count+=1
             if count == 10:
                 break
+    del titles, extracted_info
     writetofile(ans)
     
 
@@ -212,7 +257,8 @@ with open(queries, 'r') as f:
             count = 0
             ans = []
             for title in output:
-                ans.append(all_titles[title-1])
+                curr_title = get_title(title-1)
+                ans.append(curr_title)
                 count+=1
                 if count == 10:
                     break
