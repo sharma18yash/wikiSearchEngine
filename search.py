@@ -36,22 +36,24 @@ for i in range(0, number_of_title_files):
 
 category_index = { "b":0, "i":1, "c":2, "r":3, "t":4,  "e":5}
 
-section_weights = {0:20, 1:60, 2:50, 3:40, 4:100, 5:30}
+section_weights = {0:5, 1:25, 2:10, 3:10, 4:50, 5:20}
     
 stopwords = pre.getStopWords()
 
 
-def read_file(file_name):
+def read_file(file_name, word):
     temp = {}
     with open(file_name) as fp:
         Lines = fp.readlines()
         for line in Lines:
             line = line.strip("\n")
             data = line.split("~")
-            try:
+            # try:
+            #     temp[data[0]] = data[1]
+            # except IndexError:
+            #     pass
+            if data[0] == word:
                 temp[data[0]] = data[1]
-            except IndexError:
-                pass
     return temp
 
 def get_posting_list(query):
@@ -64,7 +66,7 @@ def get_posting_list(query):
             file_name = "misc.txt"
         # print(file_name)
         # print(file_name, word, word[0])
-        all_words = read_file(file_name)
+        all_words = read_file(file_name, word)
         try:
             posting_lists[word] = all_words[word]
         except KeyError:
@@ -106,33 +108,31 @@ def process_posting_list(posting_lists, count=10, special = False):
             word = word.split("-")
             current_data = [0]*8
             for token in word:
-                if len(token) == 0:
-                    continue
-                if token[0] == 'd':
-                    current_data[0] = int(token[1:])
-                if token[0] == 'b':
-                    current_data[1] = int(token[1:])*section_weights[category_index["b"]]
-                if token[0] == 'i':
-                    current_data[2] = int(token[1:])*section_weights[category_index["i"]]
-                if token[0] == 'c':
-                    current_data[3] = int(token[1:])*section_weights[category_index["c"]]
-                if token[0] == 'r':
-                    current_data[4] = int(token[1:])*section_weights[category_index["r"]]
-                if token[0] == 't':
-                    current_data[5] = int(token[1:])*section_weights[category_index["t"]]
-                if token[0] == 'e':
-                    current_data[6] = int(token[1:])*section_weights[category_index["e"]]
+                try:
+                    if len(token) == 0:
+                        continue
+                    if token[0] == 'd':
+                        current_data[0] = int(token[1:])
+                    if token[0] == 'b':
+                        current_data[1] = int(token[1:])*section_weights[category_index["b"]]
+                    if token[0] == 'i':
+                        current_data[2] = int(token[1:])*section_weights[category_index["i"]]
+                    if token[0] == 'c':
+                        current_data[3] = int(token[1:])*section_weights[category_index["c"]]
+                    if token[0] == 'r':
+                        current_data[4] = int(token[1:])*section_weights[category_index["r"]]
+                    if token[0] == 't':
+                        current_data[5] = int(token[1:])*section_weights[category_index["t"]]
+                    if token[0] == 'e':
+                        current_data[6] = int(token[1:])*section_weights[category_index["e"]]
+                except ValueError:
+                    pass
             current_data[7] = key
             docs.append(current_data[0])
             extracted_info.append(current_data)
         all_docs.append(docs)
     
     page_ranks = page_rank(all_docs, extracted_info)
-
-    # for i in page_ranks:
-    #     for j in extracted_info:
-    #         if j[0] == i:
-    #             print(j)
     del all_docs
     k = min(len(page_ranks), count)
     titles = []
@@ -204,7 +204,7 @@ def process_special_query(query):
     new_query = pre.stemmer(new_query)
     # print(word_cat, new_query)
     posting_lists = get_posting_list(new_query)
-    titles, extracted_info = process_posting_list(posting_lists, count=10, special=True)
+    titles, extracted_info = process_posting_list(posting_lists, count=20, special=True)
     
     del posting_lists
 
