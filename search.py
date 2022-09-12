@@ -3,6 +3,8 @@ import time
 import math
 import json
 import sys
+from unittest import result
+from xxlimited import new
 import preprocess
 from nltk.stem import PorterStemmer
 
@@ -36,7 +38,7 @@ for i in range(0, number_of_title_files):
 
 category_index = { "b":0, "i":1, "c":2, "r":3, "t":4,  "e":5}
 
-section_weights = {0:5, 1:25, 2:10, 3:10, 4:50, 5:20}
+section_weights = {0:0, 1:10, 2:10, 3:30, 4:100, 5:20}
     
 stopwords = pre.getStopWords()
 
@@ -76,6 +78,9 @@ def get_posting_list(query):
     return posting_lists
 
 
+def intersect(d):
+    res = set.intersection(*map(set,d))
+    return res
 
 def page_rank(all_docs, extracted_info):
     tf_idf = {}
@@ -83,18 +88,64 @@ def page_rank(all_docs, extracted_info):
     for data in extracted_info:
         document_frequency = len(data)
         term_frequency = sum(data[1:7])
-        score = term_frequency * math.log10(N/document_frequency)
+        score = (term_frequency) * math.log10(N/document_frequency)
         if data[0] in tf_idf.keys():
             tf_idf[data[0]] += score
         else:
             tf_idf[data[0]] = score
-    # print(tf_idf)
     ranks = sorted(tf_idf.items(), key = lambda x: x[1], reverse = True) 
     docs = []
     for key, value in ranks:
         docs.append(key)
     del ranks
     return docs
+
+def merge_posting_list(posting_lists):
+    title_posting_dict = []
+    all_titles_ind = []
+    key_list = []
+    for key in posting_lists.keys():
+        key_list.append(key)
+        posting_list = posting_lists[key]
+        all_docs = posting_list.split("|")
+        d = {}
+        title_ind = set()
+        for val in all_docs:
+            arr = val.split("-")
+            try:
+                d[int(arr[0][1:])] = val
+                title_ind.add(int(arr[0][1:]))
+            except:
+                pass
+        title_posting_dict.append(d)
+        all_titles_ind.append(title_ind)
+    l=0
+    for arr in all_titles_ind:
+        l+=len(arr)
+    print("all titles: ", l)
+    all_titles_ind =  intersect(all_titles_ind)
+    print("Afetr intersection: ", len(all_titles_ind))
+    all_titles_ind = list(all_titles_ind)
+    # print(all_titles_ind)
+    # print(all_titles_ind)
+    new_posting_lists = {}
+    for title in all_titles_ind:
+        ind = 0
+        for key in key_list:
+            if key in new_posting_lists:
+                new_posting_lists[key] += title_posting_dict[ind][title] + "|"
+            else:
+                # print(ind, title)
+                # print("printing this: ", title_posting_dict[ind][title])
+                new_posting_lists[key] = title_posting_dict[ind][title] + "|"
+            ind+=1
+    
+    with open("temp1.txt", 'w') as f:
+        for key in new_posting_lists.keys():
+            f.write("%s~%s\n"%(key, new_posting_lists[key]))
+
+    return new_posting_lists
+
 
 def process_posting_list(posting_lists, count=10, special = False):
     extracted_info = []
@@ -176,6 +227,7 @@ def get_title(title):
     return all_titles[title_ind]
 
 def process_special_query(query):
+    # print("in special query ")
     query = query.split()
     word_cat = {}
     new_query = []
@@ -204,9 +256,14 @@ def process_special_query(query):
     new_query = pre.stemmer(new_query)
     # print(word_cat, new_query)
     posting_lists = get_posting_list(new_query)
-    titles, extracted_info = process_posting_list(posting_lists, count=20, special=True)
+    merged_posting_list = merge_posting_list(posting_lists)
+    # print(merged_posting_list)
+    titles, extracted_info = process_posting_list(merged_posting_list,  special=True)
+    if( len(titles) < 11):
+        titles, extracted_info = process_posting_list(posting_lists, count=10, special=True)
     
     del posting_lists
+
 
     title_category = {}
     for arr in extracted_info:
@@ -217,18 +274,24 @@ def process_special_query(query):
     # print(extracted_info[:10])
     # print()
     ans = []
+    k = min(len(titles), 10)
+    # print("PRINTING TITLES: ", titles)
     for title in titles:
+        if(title == 0):
+            continue
         categories = title_category[title]
         # print(categories)
         word = categories[6]
         word_c = word_cat[word]
         ind = category_index[word_c]
-        if categories[ind] > 0:
-            curr_title = get_title(title-1)
-            ans.append(curr_title)
-            count+=1
-            if count == 10:
-                break
+        # print(title)
+        # if categories[ind] > 0:
+            
+        curr_title = get_title(title-1)
+        ans.append(curr_title)
+        count+=1
+        if count == k:
+            break
     del titles, extracted_info
     writetofile(ans)
     
@@ -252,10 +315,13 @@ with open(queries, 'r') as f:
             new_query = pre.remove_stopwords(query)
             new_query = pre.stemmer(new_query)
             posting_lists = get_posting_list(new_query)
-            output = process_posting_list(posting_lists, 10)
+            merged_list = merge_posting_list(posting_lists)
+            # print(merged_list)
+            output = process_posting_list(merged_list, 10)
 
             count = 0
             ans = []
+            k = min(10, len(output))
             for title in output:
                 curr_title = get_title(title-1)
                 ans.append(curr_title)
