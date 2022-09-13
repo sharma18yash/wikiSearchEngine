@@ -8,30 +8,62 @@ from xxlimited import new
 import preprocess
 from nltk.stem import PorterStemmer
 
+number_of_title_files = 223
+
+
+
+
 queries= sys.argv[1]
 
 output_file = sys.argv[2]
 pre = preprocess.Preprocess()
 ps = PorterStemmer()
 
-word_file = {}
-for i in range(0, 9):
-    word_file[str(i)] = "tmp/final_index{}.txt".format(i)
+# word_file = {}
+# for i in range(0, 9):
+#     word_file[str(i)] = "tmp/final_index{}.txt".format(i)
 
-c = 97
-for i in range(10, 35):
-    word_file[chr(c)] = "tmp/final_index{}.txt".format(i)
-    c+=1
-word_file['9'] = "tmp/misc.txt"
-word_file['z'] = "tmp/misc.txt"
-word_file['@'] = "tmp/final_index9.txt"
+# c = 97
+# for i in range(10, 35):
+#     word_file[chr(c)] = "tmp/final_index{}.txt".format(i)
+#     c+=1
+# word_file['9'] = "tmp/misc.txt"
+# word_file['z'] = "tmp/misc.txt"
+# word_file['@'] = "tmp/final_index9.txt"
 # all_titles = []
 
 
 # with open('final/title_list.txt') as f:
 #   all_titles = json.load(f)
 
-number_of_title_files = 223
+def load_secondary_index():
+    secondary_index = []
+    with open("tmp/secondary_index.txt", 'r') as fp:
+        lines = fp.readlines()
+        for line in lines:
+            temp = []
+            line = line.strip("\n")
+            data = line.split("~")
+            temp.append(data[0])
+            temp.append(data[1])
+            secondary_index.append(temp)
+    return secondary_index
+
+secondary_index = load_secondary_index()
+
+def binary_search(word):
+    low = 0
+    high = len(secondary_index)-1
+    while(low <= high):
+        mid = (low + high)//2
+        if(word >= secondary_index[mid][0] and word <= secondary_index[mid][1]):
+            return mid
+        if word > secondary_index[mid][1]:
+            low = mid+1;
+        else:
+            high = mid-1;
+    return "xx"
+
 title_files = []
 for i in range(0, number_of_title_files):
     title_files.append(i)
@@ -61,13 +93,14 @@ def read_file(file_name, word):
 def get_posting_list(query):
     posting_lists= {}
     for word in query.split():
-        try:
-            file_name = word_file[word[0]]
-            
-        except KeyError:
-            file_name = "misc.txt"
+        
+        index = binary_search(word)
+        if(index == "xx"):
+            print(word, "NOT FOUND")
+        else:
+            file_name = "tmp/final_index{}.txt".format(index)
         # print(file_name)
-        # print(file_name, word, word[0])
+        # print(file_name, word)
         all_words = read_file(file_name, word)
         try:
             posting_lists[word] = all_words[word]
@@ -122,9 +155,9 @@ def merge_posting_list(posting_lists):
     l=0
     for arr in all_titles_ind:
         l+=len(arr)
-    print("all titles: ", l)
+    # print("all titles: ", l)
     all_titles_ind =  intersect(all_titles_ind)
-    print("Afetr intersection: ", len(all_titles_ind))
+    # print("Afetr intersection: ", len(all_titles_ind))
     all_titles_ind = list(all_titles_ind)
     # print(all_titles_ind)
     # print(all_titles_ind)
@@ -221,7 +254,7 @@ def get_title(title):
         
 
     title_ind = ind - 100000*title_file_ind
-    print(value, title_ind, len(all_titles))
+    # print(value, title_ind, len(all_titles))
     # print(all_titles[title_ind],", ", all_titles[title_ind+1],", ", all_titles[title_ind+2])
     # print(title_ind, title_file_ind, len(all_titles))
     return all_titles[title_ind]
@@ -331,7 +364,6 @@ with open(queries, 'r') as f:
             writetofile(ans)
 
 t2 = time.time()
-    # print(posting_lists)
 print("TIME TAKEN: ", t2-t1)
     
 
