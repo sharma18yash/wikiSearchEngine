@@ -7,6 +7,8 @@ from unittest import result
 from xxlimited import new
 import preprocess
 from nltk.stem import PorterStemmer
+t1 = time.time()
+
 
 number_of_title_files = 223
 
@@ -19,22 +21,17 @@ output_file = sys.argv[2]
 pre = preprocess.Preprocess()
 ps = PorterStemmer()
 
-# word_file = {}
-# for i in range(0, 9):
-#     word_file[str(i)] = "tmp/final_index{}.txt".format(i)
-
-# c = 97
-# for i in range(10, 35):
-#     word_file[chr(c)] = "tmp/final_index{}.txt".format(i)
-#     c+=1
-# word_file['9'] = "tmp/misc.txt"
-# word_file['z'] = "tmp/misc.txt"
-# word_file['@'] = "tmp/final_index9.txt"
-# all_titles = []
-
-
-# with open('final/title_list.txt') as f:
-#   all_titles = json.load(f)
+# def term_frequency_penalty():
+#     term_frequency_penalty = {}
+#     with open("document_frequency.txt", 'r') as f:
+#         while(True):
+#             line = f.readline()
+#             line = line.strip("\n")
+#             if len(line) == 0:
+#                 break
+#             data = line.split("~")
+#             term_frequency_penalty[data[0]] = data[1]
+#     return term_frequency_penalty
 
 def load_secondary_index():
     secondary_index = []
@@ -50,6 +47,7 @@ def load_secondary_index():
     return secondary_index
 
 secondary_index = load_secondary_index()
+# term_frequency_pen = term_frequency_penalty()
 
 def binary_search(word):
     low = 0
@@ -70,7 +68,7 @@ for i in range(0, number_of_title_files):
 
 category_index = { "b":0, "i":1, "c":2, "r":3, "t":4,  "e":5}
 
-section_weights = {0:0, 1:10, 2:10, 3:30, 4:100, 5:20}
+section_weights = {0:10, 1:50, 2:30, 3:30, 4:100, 5:20}
     
 stopwords = pre.getStopWords()
 
@@ -119,9 +117,9 @@ def page_rank(all_docs, extracted_info):
     tf_idf = {}
     N = 22200000
     for data in extracted_info:
-        document_frequency = len(data)
+        document_freq = data[8]
         term_frequency = sum(data[1:7])
-        score = (term_frequency) * math.log10(N/document_frequency)
+        score = (term_frequency) * math.log10(N/document_freq)
         if data[0] in tf_idf.keys():
             tf_idf[data[0]] += score
         else:
@@ -180,7 +178,7 @@ def merge_posting_list(posting_lists):
     return new_posting_lists
 
 
-def process_posting_list(posting_lists, count=10, special = False):
+def process_posting_list(posting_lists, documet_frequency,  count=10, special = False):
     extracted_info = []
     all_docs = []
     for key in posting_lists.keys():
@@ -190,7 +188,7 @@ def process_posting_list(posting_lists, count=10, special = False):
         
         for word in data:
             word = word.split("-")
-            current_data = [0]*8
+            current_data = [0]*9
             for token in word:
                 try:
                     if len(token) == 0:
@@ -212,6 +210,7 @@ def process_posting_list(posting_lists, count=10, special = False):
                 except ValueError:
                     pass
             current_data[7] = key
+            current_data[8] = documet_frequency[key]
             docs.append(current_data[0])
             extracted_info.append(current_data)
         all_docs.append(docs)
@@ -289,11 +288,14 @@ def process_special_query(query):
     new_query = pre.stemmer(new_query)
     # print(word_cat, new_query)
     posting_lists = get_posting_list(new_query)
+    docuement_frequency = {}
+    for key in posting_lists.keys():
+        docuement_frequency[key] = len(posting_lists[key])
     merged_posting_list = merge_posting_list(posting_lists)
     # print(merged_posting_list)
-    titles, extracted_info = process_posting_list(merged_posting_list,  special=True)
+    titles, extracted_info = process_posting_list(merged_posting_list,docuement_frequency,count=10,  special=True)
     if( len(titles) < 11):
-        titles, extracted_info = process_posting_list(posting_lists, count=10, special=True)
+        titles, extracted_info = process_posting_list(posting_lists, docuement_frequency,count=10, special=True)
     
     del posting_lists
 
@@ -332,12 +334,15 @@ def process_special_query(query):
             
 
 
-t1 = time.time()
+
 
 with open(queries, 'r') as f:
-    
+    ind = 0
     while(True):
         query = f.readline().strip("\n")
+        query = query.lower()
+        t3 = time.time()
+        ind+=1
         if len(query) == 0:
             break
         query = query.lower()
@@ -348,9 +353,17 @@ with open(queries, 'r') as f:
             new_query = pre.remove_stopwords(query)
             new_query = pre.stemmer(new_query)
             posting_lists = get_posting_list(new_query)
+            docuement_frequency = {}
+            for key in posting_lists.keys():
+                docuement_frequency[key] = len(posting_lists[key])
             merged_list = merge_posting_list(posting_lists)
             # print(merged_list)
-            output = process_posting_list(merged_list, 10)
+            output = process_posting_list(merged_list,docuement_frequency, 10)
+            
+            
+            del merged_list
+            del docuement_frequency
+            del posting_lists
 
             count = 0
             ans = []
@@ -362,9 +375,11 @@ with open(queries, 'r') as f:
                 if count == 10:
                     break
             writetofile(ans)
+        t4 = time.time()
+        print("query {} completed in: ".format(ind), t4-t3)
 
 t2 = time.time()
-print("TIME TAKEN: ", t2-t1)
+print("TOTAL TIME TAKEN: ", t2-t1)
     
 
 
